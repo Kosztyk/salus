@@ -41,3 +41,5 @@ climate:
 
 ### Known issues
 salus-it500.com server is bloking the IP of the host, in our case the HA external IP. This can be fixed with router restart in case of PPOE connection or you can try to send a mail to salus support...
+
+### Added GUI setup steps
