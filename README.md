@@ -1,4 +1,4 @@
-# Home-Assistant Custom Components
+![icon@2x](https://github.com/user-attachments/assets/61c52769-9e92-43cb-b9ea-66ac353db157) Home-Assistant Custom Components
 Custom Components for Home-Assistant (http://www.home-assistant.io)
 
 # Salus Thermostat Climate Component
