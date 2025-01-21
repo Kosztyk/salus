@@ -6,7 +6,7 @@ import time
 import logging
 import re
 import requests
-import json 
+import json
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -56,7 +56,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     device_id = config_data.get(CONF_ID)
 
     # Create and add a single SalusThermostat entity
-    async_add_entities([SalusThermostat(name, username, password, device_id)], update_before_add=True)
+    async_add_entities(
+        [SalusThermostat(name, username, password, device_id)],
+        update_before_add=True,
+    )
 
 
 class SalusThermostat(ClimateEntity):
@@ -144,11 +147,13 @@ class SalusThermostat(ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current running hvac operation."""
-        if self._target_temperature is not None and self._current_temperature is not None:
+        if (
+            self._target_temperature is not None
+            and self._current_temperature is not None
+        ):
             if self._target_temperature <= self._current_temperature:
                 return HVACAction.IDLE
-            else:
-                return HVACAction.HEATING
+            return HVACAction.HEATING
         return HVACAction.IDLE
 
     @property
@@ -159,9 +164,23 @@ class SalusThermostat(ClimateEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        # You mentioned SUPPORT_PRESET in the original code but it wasn’t defined there.
-        # If you have predefined presets, define them as a list. Otherwise return None or an empty list.
+        # If you have custom preset modes, define and return them here.
+        # Otherwise, return an empty list.
         return []
+
+    @property
+    def icon(self) -> str:
+        """
+        Return a custom icon for the entity.
+
+        Options:
+          - Return any official MDI icon name, e.g. "mdi:thermostat".
+          - For a truly custom icon, use a custom icon set or reference
+            an icon served from /local/.
+
+        Example:
+        """
+        return "mdi:thermostat"
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -177,7 +196,7 @@ class SalusThermostat(ClimateEntity):
             "devId": self._id,
             "tempUnit": "0",
             "current_tempZ1_set": "1",
-            "current_tempZ1": temperature
+            "current_tempZ1": temperature,
         }
         headers = {"content-type": "application/x-www-form-urlencoded"}
         response = self._session.post(URL_SET_DATA, data=payload, headers=headers)
@@ -200,7 +219,11 @@ class SalusThermostat(ClimateEntity):
 
     def get_token(self):
         """Get the Session Token of the Thermostat."""
-        payload = {"IDemail": self._username, "password": self._password, "login": "Login"}
+        payload = {
+            "IDemail": self._username,
+            "password": self._password,
+            "login": "Login"
+        }
         headers = {"content-type": "application/x-www-form-urlencoded"}
         self._session.post(URL_LOGIN, data=payload, headers=headers)
 
@@ -230,7 +253,7 @@ class SalusThermostat(ClimateEntity):
         params = {
             "devId": self._id,
             "token": self._token,
-            "&_": str(int(round(time.time() * 1000)))
+            "&_": str(int(round(time.time() * 1000))),
         }
         r = self._session.get(URL_GET_DATA, params=params)
         if r and r.status_code == 200:
@@ -255,7 +278,10 @@ class SalusThermostat(ClimateEntity):
             else:
                 self._current_operation_mode = "ON"
         else:
-            _LOGGER.error("Could not get data from Salus (status_code=%s).", r.status_code if r else "No response")
+            _LOGGER.error(
+                "Could not get data from Salus (status_code=%s).",
+                r.status_code if r else "No response",
+            )
 
     def update(self):
         """Get the latest data from Salus."""
