@@ -1,4 +1,6 @@
-![icon@2x](https://github.com/user-attachments/assets/61c52769-9e92-43cb-b9ea-66ac353db157) Home-Assistant Custom Components
+![icon@2x](https://github.com/user-attachments/assets/61c52769-9e92-43cb-b9ea-66ac353db157) 
+
+Home-Assistant Custom Components
 Custom Components for Home-Assistant (http://www.home-assistant.io)
 
 # Salus Thermostat Climate Component
@@ -42,4 +44,7 @@ climate:
 ### Known issues
 salus-it500.com server is bloking the IP of the host, in our case the HA external IP. This can be fixed with router restart in case of PPOE connection or you can try to send a mail to salus support...
 
-### Added GUI setup steps
+### Added GUI setup steps 
+
+<img width="1374" alt="Screenshot 2025-01-21 at 22 35 54" src="https://github.com/user-attachments/assets/6474ced8-b990-4cb0-b260-dfff336739ee" />
+
