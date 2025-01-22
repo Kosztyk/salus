@@ -52,6 +52,8 @@ salus-it500.com server is bloking the IP of the host, in our case the HA externa
 <img width="1013" alt="Screenshot 2025-01-22 at 01 57 30" src="https://github.com/user-attachments/assets/a556d699-1d63-4afe-8e2d-1dbf1fd79f1a" />
 
 Example of card:
+
+
 <img width="479" alt="Screenshot 2025-01-22 at 02 01 09" src="https://github.com/user-attachments/assets/b62d74d1-fac8-4894-90fb-73ede770da0b" />
 
 
