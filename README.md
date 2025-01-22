@@ -55,6 +55,8 @@ Example of card:
 <img width="479" alt="Screenshot 2025-01-22 at 02 01 09" src="https://github.com/user-attachments/assets/b62d74d1-fac8-4894-90fb-73ede770da0b" />
 
 
+
+
 type: horizontal-stack
 cards:
   - type: entities
