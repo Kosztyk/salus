@@ -8,6 +8,10 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 
 from . import DOMAIN
+from datetime import timedelta
+
+# Decrease poll interval to 15 seconds:
+SCAN_INTERVAL = timedelta(seconds=15)
 
 _LOGGER = logging.getLogger(__name__)
 
