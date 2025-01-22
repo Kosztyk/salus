@@ -47,4 +47,23 @@ salus-it500.com server is bloking the IP of the host, in our case the HA externa
 ### Added GUI setup steps 
 
 <img width="1374" alt="Screenshot 2025-01-21 at 22 35 54" src="https://github.com/user-attachments/assets/6474ced8-b990-4cb0-b260-dfff336739ee" />
+### Added sensors in the integration 
 
+<img width="1013" alt="Screenshot 2025-01-22 at 01 57 30" src="https://github.com/user-attachments/assets/a556d699-1d63-4afe-8e2d-1dbf1fd79f1a" />
+
+Example of card:
+<img width="479" alt="Screenshot 2025-01-22 at 02 01 09" src="https://github.com/user-attachments/assets/b62d74d1-fac8-4894-90fb-73ede770da0b" />
+
+
+type: horizontal-stack
+cards:
+  - type: entities
+    entities:
+      - entity: sensor.heating_time
+      - entity: sensor.heater_history
+      - entity: sensor.yesterday_heater_history
+      - entity: sensor.thermostat_state
+title: Heating Statistics
+
+Note: Sensor statistics will be lost at HA restart, is an known issue, did not found a solution yet, any help here will be apreciated.
+      Thanks to Serban Iliuță that shared with us the sensor codes.
