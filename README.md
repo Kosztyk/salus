@@ -71,3 +71,4 @@ title: Heating Statistics
 
 Note: Sensor statistics will be lost at HA restart, is an known issue, did not found a solution yet, any help here will be apreciated.
       Thanks to Serban Iliuță that shared with us the sensor codes.
+      Update: sensor statistics are now memorised
