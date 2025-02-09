@@ -93,11 +93,22 @@ class StatisticaCentralaSensor(SensorEntity, RestoreEntity):  # <-- Add RestoreE
         last_state = await self.async_get_last_state()
         if last_state:
             self._hours_heating = float(last_state.state)
-            self._last_update = datetime.datetime.now()
+            attributes = last_state.attributes
+            if "last_update" in attributes:
+                self._last_update = datetime.datetime.fromisoformat(attributes["last_update"])
+            if "last_state" in attributes:
+                self._last_state = attributes["last_state"]
 
     @property
     def state(self):
         return round(self._hours_heating, 2)
+    
+    @property
+    def extra_state_attributes(self):
+        return {
+            "last_update": self._last_update.isoformat(),
+            "last_state": self._last_state,
+        }
 
     def update(self):
         now = datetime.datetime.now()
@@ -151,9 +162,12 @@ class StatisticaCentralaIeriSensor(SensorEntity, RestoreEntity):  # <-- Add Rest
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         if last_state:
-            self._state = float(last_state.state)
-            self._today_heating = 0.0
-            self._last_update = datetime.datetime.now()
+            self._hours_heating = float(last_state.state)
+            attributes = last_state.attributes
+            if "last_update" in attributes:
+                self._last_update = datetime.datetime.fromisoformat(attributes["last_update"])
+            if "last_state" in attributes:
+                self._last_state = attributes["last_state"]
 
     @property
     def state(self):
