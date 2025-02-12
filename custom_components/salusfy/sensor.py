@@ -131,22 +131,9 @@ class StatisticaCentralaSensor(SensorEntity, RestoreEntity):  # <-- Add RestoreE
         self._last_update = now
 
 
-class StatisticaCentralaIeriSensor(SensorEntity, RestoreEntity):  # <-- Add RestoreEntity
+class StatisticaCentralaIeriSensor(SensorEntity, RestoreEntity):
     """
-    Replaces:
-      - platform: history_stats
-        name: 'StatisticaCentralaIeri'
-        entity_id: climate.salus_thermostat
-        state: "heating"
-        type: time
-        start: now
-        end: midnight
-    But more accurately, it tries to store how much it heated *yesterday*.
-    Resets at midnight, storing the *previous day's total*.
-
-    This is a simplistic approach:
-     - We'll track "today's" heating. At midnight, we set self._state = today's total,
-       then reset today's to 0 for the new day.
+    Tracks yesterday's heating time. Resets at midnight, storing the previous day's total.
     """
     def __init__(self, climate_entity_id):
         self._climate_entity_id = climate_entity_id
@@ -162,8 +149,10 @@ class StatisticaCentralaIeriSensor(SensorEntity, RestoreEntity):  # <-- Add Rest
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         if last_state:
-            self._hours_heating = float(last_state.state)
+            self._state = float(last_state.state)
             attributes = last_state.attributes
+            if "today_heating" in attributes:
+                self._today_heating = float(attributes["today_heating"])
             if "last_update" in attributes:
                 self._last_update = datetime.datetime.fromisoformat(attributes["last_update"])
             if "last_state" in attributes:
@@ -172,6 +161,14 @@ class StatisticaCentralaIeriSensor(SensorEntity, RestoreEntity):  # <-- Add Rest
     @property
     def state(self):
         return round(self._state, 2)
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "today_heating": round(self._today_heating, 2),
+            "last_update": self._last_update.isoformat(),
+            "last_state": self._last_state,
+        }
 
     def update(self):
         now = datetime.datetime.now()
