@@ -6,7 +6,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.helpers.restore_state import RestoreEntity  # <-- Add this import
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
 from datetime import timedelta
@@ -34,6 +34,8 @@ async def async_setup_entry(
         StareTermostatSensor(climate_entity_id),
         StatisticaCentralaSensor(climate_entity_id),
         StatisticaCentralaIeriSensor(climate_entity_id),
+        StatisticaCentralaLunaCurentaSensor(climate_entity_id), # Add this month sensor
+        StatisticaCentralaLunaTrecutaSensor(climate_entity_id), # Add last month sensor
         DurataIncalzireSensor("sensor.thermostat_state"),  # references the sensor above
     ]
     async_add_entities(sensors, update_before_add=True)
@@ -66,7 +68,7 @@ class StareTermostatSensor(SensorEntity):
         self._state = climate_state.attributes.get("hvac_action", STATE_UNKNOWN)
 
 
-class StatisticaCentralaSensor(SensorEntity, RestoreEntity):  # <-- Add RestoreEntity
+class StatisticaCentralaSensor(SensorEntity, RestoreEntity):
     """
     Replaces:
       - platform: history_stats
@@ -102,7 +104,7 @@ class StatisticaCentralaSensor(SensorEntity, RestoreEntity):  # <-- Add RestoreE
     @property
     def state(self):
         return round(self._hours_heating, 2)
-    
+
     @property
     def extra_state_attributes(self):
         return {
@@ -188,6 +190,126 @@ class StatisticaCentralaIeriSensor(SensorEntity, RestoreEntity):
 
         self._last_state = hvac_action
         self._last_update = now
+
+
+class StatisticaCentralaLunaCurentaSensor(SensorEntity, RestoreEntity): # This Month Sensor
+    """
+    Tracks heating time for the current month. Resets at the start of each month.
+    """
+    def __init__(self, climate_entity_id):
+        self._climate_entity_id = climate_entity_id
+        self._attr_name = "This Month Heater History"
+        self._attr_unique_id = f"{climate_entity_id}_this_month_heater_history"
+        self._state = 0.0  # This month's total heating hours
+        self._monthly_heating = 0.0 # use _monthly_heating to track within the month
+        self._last_update = datetime.datetime.now()
+        self._last_state = STATE_UNKNOWN
+
+    async def async_added_to_hass(self):
+        """Restore state on startup."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._monthly_heating = float(last_state.state) # restore to _monthly_heating
+            attributes = last_state.attributes
+            if "last_update" in attributes:
+                self._last_update = datetime.datetime.fromisoformat(attributes["last_update"])
+            if "last_state" in attributes:
+                self._last_state = attributes["last_state"]
+
+        # Correctly initialize _state to _monthly_heating on restore
+        self._state = self._monthly_heating
+
+
+    @property
+    def state(self):
+        return round(self._monthly_heating, 2) # display _monthly_heating as state
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "last_update": self._last_update.isoformat(),
+            "last_state": self._last_state,
+        }
+
+    def update(self):
+        now = datetime.datetime.now()
+        climate_state = self.hass.states.get(self._climate_entity_id)
+        hvac_action = STATE_UNKNOWN
+        if climate_state:
+            hvac_action = climate_state.attributes.get("hvac_action", STATE_UNKNOWN)
+
+        time_diff = (now - self._last_update).total_seconds() / 3600.0
+        if self._last_state == "heating":
+            self._monthly_heating += time_diff
+
+        # if new month => reset this month's heating
+        if now.month != self._last_update.month:
+            self._monthly_heating = 0.0
+
+        self._last_state = hvac_action
+        self._last_update = now
+
+
+class StatisticaCentralaLunaTrecutaSensor(SensorEntity, RestoreEntity): # Last Month Sensor
+    """
+    Tracks heating time for the last month. Updates at the start of each month.
+    """
+    def __init__(self, climate_entity_id):
+        self._climate_entity_id = climate_entity_id
+        self._attr_name = "Last Month Heater History"
+        self._attr_unique_id = f"{climate_entity_id}_last_month_heater_history"
+        self._state = 0.0  # Last month's total heating hours
+        self._this_month_heating = 0.0 # Track heating for the current month, to move to last month at month change
+        self._last_update = datetime.datetime.now()
+        self._last_state = STATE_UNKNOWN
+
+    async def async_added_to_hass(self):
+        """Restore state on startup."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._state = float(last_state.state) # restore last month's history
+            attributes = last_state.attributes
+            if "this_month_heating" in attributes:
+                self._this_month_heating = float(attributes["this_month_heating"]) # restore current month tracking
+            if "last_update" in attributes:
+                self._last_update = datetime.datetime.fromisoformat(attributes["last_update"])
+            if "last_state" in attributes:
+                self._last_state = attributes["last_state"]
+
+
+    @property
+    def state(self):
+        return round(self._state, 2) # display last month's history
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "this_month_heating": round(self._this_month_heating, 2), # for debug/info, keep track of current month's value
+            "last_update": self._last_update.isoformat(),
+            "last_state": self._last_state,
+        }
+
+    def update(self):
+        now = datetime.datetime.now()
+        climate_state = self.hass.states.get(self._climate_entity_id)
+        hvac_action = STATE_UNKNOWN
+        if climate_state:
+            hvac_action = climate_state.attributes.get("hvac_action", STATE_UNKNOWN)
+
+        time_diff = (now - self._last_update).total_seconds() / 3600.0
+        if self._last_state == "heating":
+            self._this_month_heating += time_diff
+
+        # if new month => move this month's total to "last month"
+        if now.month != self._last_update.month:
+            self._state = self._this_month_heating # current month becomes last month
+            self._this_month_heating = 0.0 # reset current month counter
+
+        self._last_state = hvac_action
+        self._last_update = now
+
 
 
 class DurataIncalzireSensor(SensorEntity):
