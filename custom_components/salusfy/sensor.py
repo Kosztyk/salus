@@ -37,6 +37,7 @@ async def async_setup_entry(
         StatisticaCentralaLunaCurentaSensor(climate_entity_id), # Add this month sensor
         StatisticaCentralaLunaTrecutaSensor(climate_entity_id), # Add last month sensor
         DurataIncalzireSensor("sensor.thermostat_state"),  # references the sensor above
+        SalusCurrentTempSensor(climate_entity_id)
     ]
     async_add_entities(sensors, update_before_add=True)
 
@@ -356,3 +357,44 @@ class DurataIncalzireSensor(SensorEntity):
 
         self._last_state = hvac_action
         self._last_update = now
+        
+    from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature
+)
+
+class SalusCurrentTempSensor(SensorEntity):
+    """Sensor to expose the current temperature from the Salus climate entity."""
+
+    def __init__(self, climate_entity_id: str):
+        self._climate_entity_id = climate_entity_id
+        self._attr_name = "Salus Current Temperature"
+        self._attr_unique_id = f"{climate_entity_id}_current_temperature"
+        # Use device_class and state_class for better UI support:
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._state = STATE_UNKNOWN
+
+    @property
+    def native_value(self):
+        """Return the current temperature as a float or Unknown/Unavailable."""
+        return self._state
+
+    def update(self):
+        """Fetch the current temperature from the Salus climate entity."""
+        climate_state = self.hass.states.get(self._climate_entity_id)
+        if not climate_state:
+            self._state = STATE_UNAVAILABLE
+            return
+
+        # climate_state.attributes.get("current_temperature") is the important part
+        temperature = climate_state.attributes.get("current_temperature", STATE_UNKNOWN)
+        self._state = temperature
+    
