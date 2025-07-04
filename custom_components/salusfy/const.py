@@ -1,1 +1,1 @@
-DOMAIN = "salusfy"
+DOMAIN = "salus"
