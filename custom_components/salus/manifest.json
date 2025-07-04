@@ -1,12 +1,12 @@
 {
   "domain": "salus",
   "name": "Salus thermostat",
-  "version": "0.0.14",
-  "documentation": "https://github.com/floringhimie/salusfy",
-  "issue_tracker": "https://github.com/floringhimie/salusfy/issues",
+  "version": "0.0.15",
+  "documentation": "https://github.com/kosztyk/salusfy",
+  "issue_tracker": "https://github.com/kosztyk/salusfy/issues",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@floringhimie"],
+  "codeowners": ["@floringhimie","kosztyk"],
   "iot_class": "cloud_polling",
   "config_flow": true
 }
